@@ -47,7 +47,14 @@ BLUE = (0, 0, 255)
 PURPLE = (128, 0, 128)
 PINK = (255, 192, 203)
 
+# Define circle parameters
+circle_radius = 50
+circle_positions = [RED_PLACE, YELLOW_PLACE, GREEN_PLACE, BLUE_PLACE, PURPLE_PLACE, PINK_PLACE]
+circle_colors = [RED, YELLOW, GREEN, BLUE, PURPLE, PINK]
+result_colors = [GREEN, YELLOW, RED]
 
+num_of_places1 = 0
+num_of_places2 = 0
 def distance(point1, point2):
     """
     Calculate the distance between two points.
@@ -114,20 +121,16 @@ def draw_gussed_colors(lst):
     :param lst: The list of guessed color indices.
     :type lst: list
     """
+    global num_of_places1
     j = 0
-    num = 0
     while j < 4:
         print("printing circle")
-        temp_place = PLACES[num]
+        temp_place = PLACES[num_of_places1]
         pygame.draw.circle(screen, circle_colors[lst[j]], temp_place[j], 10)
+        print(num_of_places1)
+        print(temp_place)
         j += 1
-    num += 1
-
-# Define circle parameters
-circle_radius = 50
-circle_positions = [RED_PLACE, YELLOW_PLACE, GREEN_PLACE, BLUE_PLACE, PURPLE_PLACE, PINK_PLACE]
-circle_colors = [RED, YELLOW, GREEN, BLUE, PURPLE, PINK]
-result_colors = [GREEN, YELLOW, RED]
+    num_of_places1 += 1
 
 
 def print_result(lst):
@@ -137,16 +140,14 @@ def print_result(lst):
     :param lst: The list of result color indices.
     :type lst: list
     """
-    i = 0
+    global num_of_places2
     j = 0
     while j < 4:
         print("printing circle")
-        temp_place2 = PLACES2[i]
+        temp_place2 = PLACES2[num_of_places2]
         pygame.draw.circle(screen, result_colors[lst[j]], temp_place2[j], 5)
         j += 1
-        #for el in PLACES2:
-        #    el_new = (el[0], el[1] + 40)
-        #    el = el_new
+    num_of_places2 += 1
 
 
 def main():
