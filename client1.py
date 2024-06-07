@@ -1,4 +1,5 @@
 import pygame
+import select
 import sys
 import math
 import socket
@@ -77,8 +78,16 @@ def return_color(point):
         return 5
     return 6
 
+
 FONT = pygame.font.Font(None, 48)
 FONT2 = pygame.font.Font(None, 30)
+
+
+def handle_socket_error(sock):
+    error_message = f"Error on socket {sock}"
+    # Log the error message (optional)
+    print(error_message)
+    sock.close()
 
 
 def send_lst(client_socket, lst):
@@ -95,10 +104,20 @@ def send_lst(client_socket, lst):
     text = FONT2.render("your code is:", True, (0, 0, 0))
     text_rect = text.get_rect(center=(600, 150))
     screen.blit(text, text_rect)
+
+
+def draw_code_circle(lst):
+    """
+    Draws circles on the screen at specified positions and colors based on the provided list.
+
+    :param lst: List of indices representing the colors to be used from the 'circle_colors' list.
+    :type lst: list of int
+    """
     j = 0
     while j < 4:
         pygame.draw.circle(screen, circle_colors[lst[j]], PLACES[j], 10)
         j += 1
+        pygame.display.flip()
     lst.clear()
 
 
@@ -116,6 +135,7 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP, PORT))
 print("Connected to server")
 
+
 def main():
     """
     Main game loop that handles user interaction and communication with the server.
@@ -129,7 +149,6 @@ def main():
     pygame.display.set_caption("BUL PGIAA")
     clock = pygame.time.Clock()
     # Clear the screen
-    pygame.display.flip()
     screen.fill(WHITE)
     # write on screen
     text = FONT.render("Enter your code:", True, (0,0,0))
@@ -138,11 +157,22 @@ def main():
     # Draw circles
     for i in range(len(circle_positions)):
         pygame.draw.circle(screen, circle_colors[i], circle_positions[i], circle_radius)
-        count = 0
-        list_numbers = []
+    count = 0
+    list_numbers = []
     pygame.display.flip()
     finish = False
     while not finish:
+        rlist, wlist, xlist = select.select([client_socket], [client_socket], [client_socket])
+
+        if xlist:
+            # Handle errors on the sockets in xlist
+            for sock in xlist:
+                handle_socket_error(sock)
+
+        data = ''
+        if rlist:
+            data = client_socket.recv(1024)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finish = True
@@ -156,22 +186,14 @@ def main():
                         print("hi")
                         if count == 4:
                             send_lst(client_socket, list_numbers)
+                            draw_code_circle(list_numbers)
                             print("sent")
-                            finish = True
-
-            for i in range(len(circle_positions)):
-                pygame.draw.circle(screen, circle_colors[i], circle_positions[i], circle_radius)
-            pygame.display.flip()
-
-    data = client_socket.recv(10)
-    while data == b'':
-        print("hi?")
-
-    print(data)
-    if data == b'LOST':
-        print("you lost")
-    if data == b'WON':
-        print("you won")
+        if data == b'LOST':
+            print("you lost")
+            finish = True
+        if data == b'WON':
+            print("you won")
+            finish = True
 
     client_socket.close()
     clock.tick(REFRESH_RATE)
